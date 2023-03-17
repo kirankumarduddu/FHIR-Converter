@@ -1,82 +1,64 @@
 {
-    "fullUrl":"urn:uuid:{{ ID }}",
-    "resource":{
+    "fullUrl": "urn:uuid:{{ ID }}",
+    "resource": {
         "resourceType": "Composition",
-        "id":"{{ ID }}",
-        "identifier":
-        {
-            "use":"official",
-            "value":"{{ composition.id.root }}",
+        "id": "{{ ID }}",
+        "identifier": {
+            "use": "official",
+            "value": "{{ composition.id.root }}"
         },
-        "status":"final",
-        "type":
-        {
+        "status": "final",
+        "type": {
             {% assign codes = composition.code | to_array -%}
             {% include 'DataType/CodeableConcept' CodeableConcept: codes.first -%}
         },
-        "date":"{{ composition.effectiveTime.value | format_as_date_time }}",
-        "title":"{{ composition.title._ }}",
-        "confidentiality":"{{ composition.confidentialityCode.code }}",
-        "attester":
-        [
+        "date": "{{ composition.effectiveTime.value | format_as_date_time }}",
+        "title": "{{ composition.title._ }}",
+        "confidentiality": "{{ composition.confidentialityCode.code }}",
+        "attester": [
             {
                 {% if composition.legalAuthenticator -%}
-                "mode":"legal",
+                "mode": "legal",
                 {% endif -%}
                 {% if composition.legalAuthenticator -%}
-                "time":"{{ composition.legalAuthenticator.time.value | format_as_date_time }}",
+                "time": "{{ composition.legalAuthenticator.time.value | format_as_date_time }}",
                 {% endif -%}
-                "party":
-                {
+                "party": {
                     {% if practitionerId -%}
-                    "reference":"Practitioner/{{practitionerId}}",
+                    "reference": "Practitioner/{{practitionerId}}",
                     {% endif -%}
-                },
-            },
+                }
+            }
         ],
-        "event":
-        [
+        "event": [
             {
-                "period":
-                {
-                    "start":"{{ composition.documentationOf.serviceEvent.effectiveTime.low.value | format_as_date_time }}",
-                    "end":"{{ composition.documentationOf.serviceEvent.effectiveTime.high.value | format_as_date_time }}",
-                },
-            },
+                "period": {
+                    "start": "{{ composition.documentationOf.serviceEvent.effectiveTime.low.value | format_as_date_time }}",
+                    "end": "{{ composition.documentationOf.serviceEvent.effectiveTime.high.value | format_as_date_time }}"
+                }
+            }
         ],
-        "section":
-        [
+        "section": [
             {% assign components = composition.component.structuredBody.component | to_array -%}
             {% for component in components -%}
-            {   
+            {
                 {% if component.section -%}
-                    {% if component.section.title._ -%}
-                    "title":"{{ component.section.title._ }}",
-                    {% endif -%}
-                    {% if component.section.title._ == null -%}
-                    "title":"{{ component.section.code.displayName }}",
-                    {% endif -%}
-                    "text":
-                    {
-                        "status":"generated",
-                        {% if component.section.title._ -%}
-                            "div":"<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ component.section.title._ | escape }}</div>",
-                        {% else -%}
-                            "div":"<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ component.section.code.displayName | escape }}</div>",
-                        {% endif -%}
-                    },
-                    "code":
-                    {
-                        {% include 'DataType/CodeableConcept' CodeableConcept: component.section.code -%}
-                    },
-                    "mode":"snapshot",
+                "title": "{{ component.section.title._ | default: component.section.code.displayName }}",
+                "text": {
+                    "status": "generated",
+                    "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\">{{ component.section.title._ | default: component.section.code.displayName | escape }}</div>"
+                },
+                "code": {
+                    {% include 'DataType/CodeableConcept' CodeableConcept: component.section.code -%}
+                },
+                "mode": "snapshot"
                 {% endif -%}
-            },
-            {% endfor -%}
-        ],
-    },
-    "request":{
-        "method":"PUT",
-        "url":"Composition/{{ ID }}",
-    },
-},
+            }{% unless forloop.last %},{% endunless %}
+        {% endfor -%}
+        ]
+        },
+        "request": {
+            "method": "PUT",
+            "url": "Composition/{{ ID }}"
+        }
+}
